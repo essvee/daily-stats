@@ -2,7 +2,6 @@ import tweepy
 import pandas as pd
 import datetime
 import os
-import apikeys
 
 
 def get_followers():
@@ -25,10 +24,12 @@ def get_followers():
         df2 = df.append(row, ignore_index=True)
         df2.to_csv('followers.csv')
 
-# Populate consumer keys and access tokens used for OAuth
-consumer_key = apikeys.c_key()
-consumer_secret = apikeys.c_secret()
-access_token = apikeys.a_token()
-access_secret = apikeys.a_secret()
+# Get keys
+f = open('apikeys.txt', 'r')
+keys = f.read().splitlines()
+consumer_key = keys[0]
+consumer_secret = keys[1]
+access_token = keys[2]
+access_secret = keys[3]
 
 get_followers()
