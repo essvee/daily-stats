@@ -27,15 +27,18 @@ def count_records():
         else:
             # Otherwise, get the title and identify resource type
             long_name = resource.get('pkg_title')
+            print(long_name)
             if long_name == 'Collection Specimens' or long_name == 'Index Lot collection' or long_name == 'Artefacts':
                 pkg_type = 'collection records'
             else:
                 pkg_type = 'research records'
             # Add to dict
             resource_dict = {'count': record_count, 'name': long_name, 'collection': pkg_type}
+            print(resource_dict)
             results[pkg_name] = resource_dict
 
     write_records(results)
+
 
 def write_records(results):
     # Get auth details + date
@@ -45,29 +48,31 @@ def write_records(results):
     user = keys[1]
     password = keys[2]
     database = keys[3]
-    today_dt = datetime.datetime.today().date()
 
     # Connect to database
     db = pymysql.connect(host=host, user=user, password=password, db=database)
     cursor = db.cursor()
 
     # Write update to package_comp
-
     try:
+        for n in results:
+            pkg_name = n
+            today_dt = datetime.datetime.today().date()
+            record_count = results[n].get('count')
+            pkg_type = results[n].get('collection')
+            long_name = results[n].get('name')
 
-        # Add new row and commit
-        sql = "INSERT INTO twitter_followers(id, date, follower_count, new_followers) " \
-              "VALUES(null, '%s', %s, %s);" % (today_dt, follower_count, lastcount)
-        cursor.execute(sql)
-        db.commit()
+            # Add new row and commit
+            sql = "INSERT INTO package_comp(pkg_name, date, record_count, pkg_type, pkg_title, id) " \
+                  "VALUES('%s', '%s', %s, '%s', '%s', null);" % (pkg_name, today_dt, record_count, pkg_type, long_name)
+            cursor.execute(sql)
+            db.commit()
+
     except pymysql.Error:
         db.rollback()
 
     cursor.close()
     db.close()
-
-# Get server details
-
 
 count_records()
 

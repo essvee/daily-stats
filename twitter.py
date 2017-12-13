@@ -1,7 +1,6 @@
 import tweepy
-import pandas as pd
 import datetime
-import os
+import pymysql
 
 
 def get_followers():
@@ -12,17 +11,29 @@ def get_followers():
     api = tweepy.API(auth)
     follower_count = api.get_user('NHM_Digitise').followers_count
     # Get runtime + date
-    today = datetime.datetime.now()
-    new_count = [{'date': today.date(), 'time': today.time(), 'followers': follower_count}]
-    row = pd.DataFrame(new_count)
-    row.index.names = ['index']
-    # write to csv
-    if not os.path.exists('followers.csv'):
-        row.to_csv('followers.csv')
-    else:
-        df = pd.read_csv('followers.csv', index_col=0)
-        df2 = df.append(row, ignore_index=True)
-        df2.to_csv('followers.csv')
+    today_dt = datetime.datetime.today().date()
+    # Connect to database
+    db = pymysql.connect(host='localhost', user='root', password='r3ptar', db='dashboard')
+    cursor = db.cursor()
+
+    # Write update to twitter_followers
+    try:
+        # Get most recent follower count
+        cursor.execute("SELECT follower_count FROM twitter_followers "
+                       "WHERE DATE IN (SELECT MAX(date) FROM twitter_followers);")
+        result = cursor.fetchone()
+        # Calculate change in followers since last period
+        lastcount = follower_count - result[0]
+        # Add new row and commit
+        sql = "INSERT INTO twitter_followers(id, date, follower_count, new_followers) " \
+              "VALUES(null, '%s', %s, %s);" % (today_dt, follower_count, lastcount)
+        cursor.execute(sql)
+        db.commit()
+    except pymysql.Error:
+        db.rollback()
+
+    cursor.close()
+    db.close()
 
 # Get keys
 f = open('apikeys.txt', 'r')
