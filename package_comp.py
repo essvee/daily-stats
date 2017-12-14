@@ -26,7 +26,7 @@ def count_records():
             results[pkg_name]['count'] = results[pkg_name]['count'] + record_count
         else:
             # Otherwise, get the title and identify resource type
-            long_name = resource.get('pkg_title').encode("utf-8")
+            long_name = resource.get('pkg_title').encode("ascii", 'ignore')
             if long_name == 'Collection Specimens' or long_name == 'Index Lot collection' or long_name == 'Artefacts':
                 pkg_type = 'collection records'
             else:
