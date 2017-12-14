@@ -1,4 +1,3 @@
-import os
 import json
 import requests
 import datetime
@@ -7,13 +6,14 @@ import pymysql
 
 def count_records():
     #  Get the most recent figures from the portal api
-    contents = json.loads(requests.get('http://data.nhm.ac.uk/api/3/action/dataset_statistics').text)
     try:
-        contents['success'] is 'true'
-    except ValueError:
-        print('api call failed')
+        r = requests.get('http://data.nhm.ac.uk/api/3/action/dataset_statistics')
+        r.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        print(e.message)
 
     # Get record detail and group according to pkg_name - record count should be sum of all resources in a package
+    contents = r.json()
     contents = contents.get('result').get('resources')
     results = {}
 
@@ -26,15 +26,13 @@ def count_records():
             results[pkg_name]['count'] = results[pkg_name]['count'] + record_count
         else:
             # Otherwise, get the title and identify resource type
-            long_name = resource.get('pkg_title')
-            print(long_name)
+            long_name = resource.get('pkg_title').encode("utf-8")
             if long_name == 'Collection Specimens' or long_name == 'Index Lot collection' or long_name == 'Artefacts':
                 pkg_type = 'collection records'
             else:
                 pkg_type = 'research records'
             # Add to dict
             resource_dict = {'count': record_count, 'name': long_name, 'collection': pkg_type}
-            print(resource_dict)
             results[pkg_name] = resource_dict
 
     write_records(results)
@@ -56,11 +54,11 @@ def write_records(results):
     # Write update to package_comp
     try:
         for n in results:
-            pkg_name = n
+            pkg_name = n.replace("'", "''")
             today_dt = datetime.datetime.today().date()
             record_count = results[n].get('count')
-            pkg_type = results[n].get('collection')
-            long_name = results[n].get('name')
+            pkg_type = results[n].get('collection').replace("'", "''")
+            long_name = results[n].get('name').replace("'", "''")
 
             # Add new row and commit
             sql = "INSERT INTO package_comp(pkg_name, date, record_count, pkg_type, pkg_title, id) " \
@@ -68,7 +66,9 @@ def write_records(results):
             cursor.execute(sql)
             db.commit()
 
-    except pymysql.Error:
+    except pymysql.Error as e:
+        print("MySQL Error: %s \nResource name: %s" % (e, long_name))
+        print(sql)
         db.rollback()
 
     cursor.close()
