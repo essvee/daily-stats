@@ -1,4 +1,6 @@
-import json
+#!/usr/bin/env python
+# coding=utf-8
+
 import requests
 import datetime
 import pymysql
@@ -26,8 +28,8 @@ def count_records():
             results[pkg_name]['count'] = results[pkg_name]['count'] + record_count
         else:
             # Otherwise, get the title and identify resource type
-            long_name = resource.get('pkg_title').encode("ascii", 'ignore')
-            if long_name == 'Collection Specimens' or long_name == 'Index Lot collection' or long_name == 'Artefacts':
+            long_name = resource.get('pkg_title')
+            if long_name == 'Collection specimens' or long_name == 'Index Lot collection' or long_name == 'Artefacts':
                 pkg_type = 'collection records'
             else:
                 pkg_type = 'research records'
@@ -57,9 +59,8 @@ def write_records(results):
             pkg_name = n.replace("'", "''")
             today_dt = datetime.datetime.today().date()
             record_count = results[n].get('count')
-            pkg_type = results[n].get('collection').replace("'", "''")
-            long_name = results[n].get('name').replace("'", "''")
-
+            pkg_type = results[n].get('collection')
+            long_name = results[n].get('name').replace("'", "''").replace("\u2013", "")
             # Add new row and commit
             sql = "INSERT INTO package_comp(pkg_name, date, record_count, pkg_type, pkg_title, id) " \
                   "VALUES('%s', '%s', %s, '%s', '%s', null);" % (pkg_name, today_dt, record_count, pkg_type, long_name)
