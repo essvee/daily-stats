@@ -15,12 +15,12 @@ def count_records():
         print(e.message)
 
     # Get record detail and group according to pkg_name - record count should be sum of all resources in a package
-    contents = r.json().get['result']['resources']
+    contents = r.json()['result']['resources']
     results = {}
 
     for resource in contents:
         pkg_name = resource['pkg_name']
-        record_count = resource.get['total']
+        record_count = resource['total']
         # Check if we've seen another resource under this package already:
         if pkg_name in results:
             # If yes, update overall count and exit
@@ -44,7 +44,7 @@ def write_records(results):
         host, user, password, database = keys
 
     # Connect to database
-    with pymysql.connect(host=host, user=user, password=password, db=database) as cursor:
+    with pymysql.connect(host="xxxx", user="xxxx", password="xxxx", db="xxxx") as cursor:
         # Write update to package_comp
         for name, resource in results.items():
             pkg_name = name.replace("'", "''")
