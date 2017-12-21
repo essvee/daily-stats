@@ -13,34 +13,28 @@ def get_followers():
     # Get runtime + date
     today_dt = datetime.datetime.today().date()
     # Connect to database
-    db = pymysql.connect(host='localhost', user='root', password='r3ptar', db='dashboard')
-    cursor = db.cursor()
-
-    # Write update to twitter_followers
-    try:
+    with pymysql.connect(host='xxxxxxxx', user='xxxxxxx', password='xxxxxxx', db='xxxxxx') as cursor:
+        # Write update to twitter_followers
         # Get most recent follower count
         cursor.execute("SELECT follower_count FROM twitter_followers "
                        "WHERE DATE IN (SELECT MAX(date) FROM twitter_followers);")
         result = cursor.fetchone()
         # Calculate change in followers since last period
-        lastcount = follower_count - result[0]
+        last_count = follower_count - result[0]
         # Add new row and commit
-        sql = "INSERT INTO twitter_followers(id, date, follower_count, new_followers) " \
-              "VALUES(null, '%s', %s, %s);" % (today_dt, follower_count, lastcount)
-        cursor.execute(sql)
-        db.commit()
-    except pymysql.Error:
-        db.rollback()
+        sql = f"INSERT INTO twitter_followers(id, date, follower_count, new_followers) " \
+              f"VALUES(null, '{today_dt}', {follower_count}, {last_count});"
+        try:
+            cursor.execute(sql)
+        except pymysql.Error as e:
+            cursor.rollback()
 
-    cursor.close()
-    db.close()
 
 # Get keys
-f = open('apikeys.txt', 'r')
-keys = f.read().splitlines()
-consumer_key = keys[0]
-consumer_secret = keys[1]
-access_token = keys[2]
-access_secret = keys[3]
+with open('apikeys.txt', 'r') as f:
+    keys = f.read().splitlines()
 
-get_followers()
+consumer_key, consumer_secret, access_token, access_secret = keys
+
+if __name__ == '__main__':
+    get_followers()
