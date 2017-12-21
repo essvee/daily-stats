@@ -15,24 +15,21 @@ def count_records():
         print(e.message)
 
     # Get record detail and group according to pkg_name - record count should be sum of all resources in a package
-    contents = r.json()
-    contents = contents.get('result').get('resources')
+    contents = r.json().get['result']['resources']
     results = {}
 
     for resource in contents:
-        pkg_name = resource.get('pkg_name')
-        record_count = resource.get('total')
+        pkg_name = resource['pkg_name']
+        record_count = resource.get['total']
         # Check if we've seen another resource under this package already:
         if pkg_name in results:
             # If yes, update overall count and exit
             results[pkg_name]['count'] = results[pkg_name]['count'] + record_count
         else:
             # Otherwise, get the title and identify resource type
-            long_name = resource.get('pkg_title')
-            if long_name == 'Collection specimens' or long_name == 'Index Lot collection' or long_name == 'Artefacts':
-                pkg_type = 'collection records'
-            else:
-                pkg_type = 'research records'
+            long_name = resource['pkg_title']
+            pkg_type = 'collection records' if long_name in ['Collection specimens', 'Index Lot collection',
+                                                             'Artefacts'] else 'research records'
             # Add to dict
             resource_dict = {'count': record_count, 'name': long_name, 'collection': pkg_type}
             results[pkg_name] = resource_dict
@@ -42,40 +39,29 @@ def count_records():
 
 def write_records(results):
     # Get auth details + date
-    f = open('server-permissions.txt', 'r')
-    keys = f.read().splitlines()
-    host = keys[0]
-    user = keys[1]
-    password = keys[2]
-    database = keys[3]
+    with open('server-permissions.txt', 'r') as f:
+        keys = f.read().splitlines()
+        host, user, password, database = keys
 
     # Connect to database
-    db = pymysql.connect(host=host, user=user, password=password, db=database)
-    cursor = db.cursor()
-
-    # Write update to package_comp
-    try:
-        for n in results:
-            pkg_name = n.replace("'", "''")
+    with pymysql.connect(host=host, user=user, password=password, db=database) as cursor:
+        # Write update to package_comp
+        for name, resource in results.items():
+            pkg_name = name.replace("'", "''")
             today_dt = datetime.datetime.today().date()
-            record_count = results[n].get('count')
-            pkg_type = results[n].get('collection')
-            long_name = results[n].get('name').replace("'", "''").replace("\u2013", "")
+            record_count = resource['count']
+            pkg_type = resource['collection']
+            long_name = str(resource['name']).replace("'", "''").replace("\u2013", "")
             # Add new row and commit
-            sql = "INSERT INTO package_comp(pkg_name, date, record_count, pkg_type, pkg_title, id) " \
-                  "VALUES('%s', '%s', %s, '%s', '%s', null);" % (pkg_name, today_dt, record_count, pkg_type, long_name)
-            cursor.execute(sql)
-            db.commit()
-
-    except pymysql.Error as e:
-        print("MySQL Error: %s \nResource name: %s" % (e, long_name))
-        print(sql)
-        db.rollback()
-
-    cursor.close()
-    db.close()
-
-count_records()
+            sql = f"INSERT INTO package_comp(pkg_name, date, record_count, pkg_type, pkg_title, id) " \
+                  f"VALUES('{pkg_name}', '{today_dt}', {record_count} , '{pkg_type}', '{long_name}', null);"
+            try:
+                cursor.execute(sql)
+            except pymysql.Error as e:
+                print("MySQL Error: %s \nResource name: %s" % (e, long_name))
+                print(sql)
+                cursor.rollback()
 
 
-
+if __name__ == '__main__':
+    count_records()
