@@ -15,19 +15,18 @@ def citation_list():
     download_keys = {}
     separator = ', '
 
+
     # Connect to database:
     with pymysql.connect(host="localhost", user="root", password="r3ptar", db="dashboard") as cursor:
-
         contents = r.json()['results']
         for c in contents:
             # Make sure record has an id, skip if not
-            if not c.get('id', None):
+            if 'id' in c:
                 id = c['id']
                 abstract = c['abstract'] if 'abstract' in c else None
                 city = c['city'] if 'city' in c else None
-                content_type = c['contentType '] if 'contentType' in c else None
+                content_type = c['contentType'] if 'contentType' in c else None
                 harvest_date = c['accessed'] if 'accessed' in c else None
-                doi = c['identifiers']['doi'] if 'doi' in c['identifiers'] else None
                 language = c['language'] if 'language' in c else None
                 literature_type = c['literatureType'] if 'literatureType' in c else None
                 open_access = c['openAccess'] if 'openAccess' in c else None
@@ -36,11 +35,17 @@ def citation_list():
                 source = c['source'] if 'source' in c else None
                 title = c['title'] if 'title' in c else None
                 year = c['year'] if 'year' in c else None
+
                 # Concatenate fields that may contain lists
                 countries_of_researcher = separator.join(c['countriesOfResearcher']) if 'countriesOfResearcher' \
                                                                                         in c else None
                 topics = separator.join(c['topics']) if 'topics' in c else None
                 gbif_download_key = separator.join(c['gbifDownloadKey']) if 'gbifDownloadKey' in c else None
+
+                # Get DOI if available
+                if 'identifiers' in c:
+                    doi = c['identifiers']['doi'] if 'doi' in c['identifiers'] else None
+
                 # Parse author name dicts
                 if 'authors' in c:
                     namelist = []
