@@ -83,8 +83,13 @@ def map_fields(contents):
 
 
 def update_or_delete(all_citations):
+    # Get auth details + date
+    with open('local_details.txt', 'r') as f:
+        keys = f.read().splitlines()
+        host, user, password, database = keys
+
     # Connect to database:
-    with pymysql.connect(host="localhost", user="root", password="r3ptar", db="dashboard") as cursor:
+    with pymysql.connect(host=host, user=user, password=password, db=database) as cursor:
 
         # todo - check against update date
         sql = f"SELECT id, update_date FROM gbif_citations;"
