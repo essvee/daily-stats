@@ -26,6 +26,7 @@ def map_fields(contents):
     # dict to hold gbifDownloadKey: id pairs to return + pass to occurrence() later
     download_keys = {}
     separator = '; '
+    all_citations = {}
 
     for c in contents:
         citation_dict = {}
@@ -75,40 +76,43 @@ def map_fields(contents):
         else:
             citation_dict['gbif_download_key'] = None
 
-        update_or_delete(citation_dict)
+        # Adds this citation to the overall list
+        all_citations[c['id']] = citation_dict
+
+    update_or_delete(all_citations)
 
 
-def update_or_delete(cd):
-
+def update_or_delete(all_citations):
     # Connect to database:
     with pymysql.connect(host="localhost", user="root", password="r3ptar", db="dashboard") as cursor:
 
-        # Check if citation is new
-        sql = f"SELECT DISTINCT id FROM gbif_citations;"
+        # todo - check against update date
+        sql = f"SELECT id, update_date FROM gbif_citations;"
         try:
             cursor.execute(sql)
-            ids = []
 
-            # List of ids already seen
+            # Create list of ids already recorded
+            ids = {}
             for n in cursor.fetchall():
-                ids.append(n[0])
+                ids[n[0]] = n[1]
 
-            if cd['gid'] not in ids:
-                add_sql = f"INSERT INTO gbif_citations(abstract, authors, city, " \
-                          f"content_type, countries_of_researcher, gbif_download_key," \
-                          f"id, harvest_date, doi, language, literature_type, open_access," \
-                          f"peer_review, publisher, source, title, topics, update_date, year)" \
-                          f"VALUES('{cd['abstract']}', '{cd['authors']}', '{cd['city']}', '{cd['content_type']}'," \
-                          f"'{cd['countries_of_researcher']}', '{cd['gbif_download_key']}', '{cd['gid']}'," \
-                          f"'{cd['harvest_date']}', '{cd['doi']}', '{cd['language']}', '{cd['literature_type']}'," \
-                          f"'{cd['open_access']}', '{cd['peer_review']}', '{cd['publisher']}', '{cd['source']}'," \
-                          f"'{cd['title']}', '{cd['topics']}', '{cd['update_date']}', {cd['year']});"
+            for gid, c in all_citations.items():
+                if c['gid'] not in ids:
+                    sql = f"INSERT INTO gbif_citations(abstract, authors, city, " \
+                              f"content_type, countries_of_researcher, gbif_download_key," \
+                              f"id, harvest_date, doi, language, literature_type, open_access," \
+                              f"peer_review, publisher, source, title, topics, update_date, year)" \
+                              f"VALUES('{c['abstract']}', '{c['authors']}', '{c['city']}', '{c['content_type']}'," \
+                              f"'{c['countries_of_researcher']}', '{c['gbif_download_key']}', '{c['gid']}'," \
+                              f"'{c['harvest_date']}', '{c['doi']}', '{c['language']}', '{c['literature_type']}'," \
+                              f"'{c['open_access']}', '{c['peer_review']}', '{c['publisher']}', '{c['source']}'," \
+                              f"'{c['title']}', '{c['topics']}', '{c['update_date']}', {c['year']});"
 
-                add_sql = add_sql.encode('ascii', 'ignore').decode('utf-8', 'ignore')
-                cursor.execute(add_sql)
+                    sql = sql.encode('ascii', 'ignore').decode('utf-8', 'ignore')
+                    cursor.execute(sql)
 
         except pymysql.Error as e:
-            print(add_sql)
+            print(sql)
             print(e)
 
 
