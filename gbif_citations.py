@@ -91,7 +91,6 @@ def update_or_delete(all_citations):
     # Connect to database:
     with pymysql.connect(host=host, user=user, password=password, db=database) as cursor:
 
-        # todo - check against update date
         sql = f"SELECT id, update_date FROM gbif_citations;"
         try:
             cursor.execute(sql)
@@ -101,6 +100,7 @@ def update_or_delete(all_citations):
             for n in cursor.fetchall():
                 ids[n[0]] = n[1]
 
+            # adds/updates new/amended records
             for gid, c in all_citations.items():
                 if c['gid'] not in ids:
                     sql = f"INSERT INTO gbif_citations(abstract, authors, city, " \
@@ -125,6 +125,7 @@ def update_or_delete(all_citations):
                           f"update_date = '{c['update_date']}', year = {c['year']} " \
                           f"WHERE id = '{c['gid']}';"
 
+                # Skips if we've seen before and they haven't changed since then
                 else:
                     continue
 
