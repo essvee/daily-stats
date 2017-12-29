@@ -23,8 +23,6 @@ def get_list():
 
 def map_fields(contents):
 
-    # dict to hold gbifDownloadKey: id pairs to return + pass to occurrence() later
-    download_keys = {}
     separator = '; '
     all_citations = {}
 
@@ -71,8 +69,6 @@ def map_fields(contents):
         # Use gbifDownloadKey as dict key - should be unique
         if 'gbifDownloadKey' in c:
             citation_dict['gbif_download_key'] = separator.join(c['gbifDownloadKey'])
-            for gkey in c['gbifDownloadKey']:
-                download_keys[gkey] = c['id']
         else:
             citation_dict['gbif_download_key'] = None
 
@@ -125,7 +121,7 @@ def update_or_delete(all_citations):
                           f"update_date = '{c['update_date']}', year = {c['year']} " \
                           f"WHERE id = '{c['gid']}';"
 
-                # Skips if we've seen before and they haven't changed since then
+                # Skip if we've seen the rec before and it hasn't changed since then
                 else:
                     continue
 
