@@ -113,8 +113,23 @@ def update_or_delete(all_citations):
                               f"'{c['open_access']}', '{c['peer_review']}', '{c['publisher']}', '{c['source']}'," \
                               f"'{c['title']}', '{c['topics']}', '{c['update_date']}', {c['year']});"
 
-                    sql = sql.encode('ascii', 'ignore').decode('utf-8', 'ignore')
-                    cursor.execute(sql)
+                elif c['update_date'] > ids[c['gid']]:
+                    sql = f"UPDATE gbif_citations SET abstract = '{c['abstract']}', authors = '{c['authors']}', " \
+                          f"city = '{c['city']}', content_type = '{c['content_type']}', " \
+                          f"countries_of_researcher = '{c['countries_of_researcher']}', " \
+                          f"gbif_download_key = '{c['gbif_download_key']}', " \
+                          f"harvest_date = '{c['harvest_date']}', doi = '{c['doi']}', language = '{c['language']}', " \
+                          f"literature_type = '{c['literature_type']}', open_access = '{c['open_access']}', " \
+                          f"peer_review = '{c['peer_review']}', publisher = '{c['publisher']}', " \
+                          f"source = '{c['source']}', title = '{c['title']}', topics = '{c['topics']}', " \
+                          f"update_date = '{c['update_date']}', year = {c['year']} " \
+                          f"WHERE id = '{c['gid']}';"
+
+                else:
+                    continue
+
+                sql = sql.encode('ascii', 'ignore').decode('utf-8', 'ignore')
+                cursor.execute(sql)
 
         except pymysql.Error as e:
             print(sql)
