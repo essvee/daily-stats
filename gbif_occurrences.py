@@ -15,9 +15,16 @@ def get_keys():
 
         try:
             cursor.execute(sql)
-            gkeys = {}
+            occurrences = {}
             for n in cursor.fetchall():
-                print(n)
+                downloads = {}
+                gk_list = n[1].split("; ")
+                # For each gkey list, split apart and add to dict with corresponding id
+                for gk in gk_list:
+                    downloads['gbif_download_key'] = gk
+                    downloads['gid'] = n[0]
+                    # Add to occurrences dict
+                    occurrences[gk] = downloads
 
         except pymysql.Error as e:
             print(sql)
