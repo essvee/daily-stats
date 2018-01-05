@@ -13,7 +13,7 @@ def get_followers():
     # Get runtime + date
     today_dt = datetime.datetime.today().date()
     # Connect to database
-    with pymysql.connect(host='xxxxxxxx', user='xxxxxxx', password='xxxxxxx', db='xxxxxx') as cursor:
+    with pymysql.connect(host=host, user=user, password=password, db=database) as cursor:
         # Write update to twitter_followers
         # Get most recent follower count
         cursor.execute("SELECT follower_count FROM twitter_followers "
@@ -22,7 +22,7 @@ def get_followers():
         # Calculate change in followers since last period
         last_count = follower_count - result[0]
         # Add new row and commit
-        sql = f"INSERT INTO twitter_followers(id, date, follower_count, new_followers) " \
+        sql = f"INSERT INTO twitter_followers(id, date, follower_count, change_followers) " \
               f"VALUES(null, '{today_dt}', {follower_count}, {last_count});"
         try:
             cursor.execute(sql)
@@ -35,6 +35,13 @@ with open('apikeys.txt', 'r') as f:
     keys = f.read().splitlines()
 
 consumer_key, consumer_secret, access_token, access_secret = keys
+
+# Get auth details + date
+with open('server-permissions.txt', 'r') as f:
+    s_keys = f.read().splitlines()
+
+host, user, password, database = s_keys
+
 
 if __name__ == '__main__':
     get_followers()
