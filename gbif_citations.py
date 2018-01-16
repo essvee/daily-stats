@@ -99,16 +99,19 @@ def update_or_delete(all_citations):
 
             # adds/updates new/amended records
             for gid, c in all_citations.items():
+                # Creates YYYY-MMM-DD string for publication date
+                pub_date = f"{c['year']}-{c['month']}-01" if c['month'] > 0 else "1000-00-00"
                 if c['gid'] not in ids:
                     sql = f"INSERT INTO gbif_citations(abstract, authors, city, " \
-                              f"content_type, countries_of_researcher, gbif_download_key," \
-                              f"id, harvest_date, doi, language, literature_type, open_access," \
-                              f"peer_review, publisher, source, title, topics, update_date, year, month)" \
-                              f"VALUES('{c['abstract']}', '{c['authors']}', '{c['city']}', '{c['content_type']}'," \
-                              f"'{c['countries_of_researcher']}', '{c['gbif_download_key']}', '{c['gid']}'," \
-                              f"'{c['harvest_date']}', '{c['doi']}', '{c['language']}', '{c['literature_type']}'," \
-                              f"'{c['open_access']}', '{c['peer_review']}', '{c['publisher']}', '{c['source']}'," \
-                              f"'{c['title']}', '{c['topics']}', '{c['update_date']}', {c['year']}, {c['month']});"
+                          f"content_type, countries_of_researcher, gbif_download_key," \
+                          f"id, harvest_date, doi, language, literature_type, open_access," \
+                          f"peer_review, publisher, source, title, topics, update_date, year, month, pub_date)" \
+                          f"VALUES('{c['abstract']}', '{c['authors']}', '{c['city']}', '{c['content_type']}'," \
+                          f"'{c['countries_of_researcher']}', '{c['gbif_download_key']}', '{c['gid']}'," \
+                          f"'{c['harvest_date']}', '{c['doi']}', '{c['language']}', '{c['literature_type']}'," \
+                          f"'{c['open_access']}', '{c['peer_review']}', '{c['publisher']}', '{c['source']}'," \
+                          f"'{c['title']}', '{c['topics']}', '{c['update_date']}', {c['year']}, {c['month']}," \
+                          f"'{pub_date}');"
 
                 elif c['update_date'] > ids[c['gid']]:
                     sql = f"UPDATE gbif_citations SET abstract = '{c['abstract']}', authors = '{c['authors']}', " \
@@ -119,7 +122,8 @@ def update_or_delete(all_citations):
                           f"literature_type = '{c['literature_type']}', open_access = '{c['open_access']}', " \
                           f"peer_review = '{c['peer_review']}', publisher = '{c['publisher']}', " \
                           f"source = '{c['source']}', title = '{c['title']}', topics = '{c['topics']}', " \
-                          f"update_date = '{c['update_date']}', year = {c['year']}, month = {c['month']} " \
+                          f"update_date = '{c['update_date']}', year = {c['year']}, month = {c['month']}, " \
+                          f"pub_date = '{pub_date}'" \
                           f"WHERE id = '{c['gid']}';"
 
                 # Skip if we've seen the rec before and it hasn't changed since then
