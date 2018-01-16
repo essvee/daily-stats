@@ -47,6 +47,7 @@ def map_fields(contents):
         citation_dict['source'] = c['source'].replace("'", "''") if 'source' in c else None
         citation_dict['title'] = c['title'].replace("'", "''") if 'title' in c else None
         citation_dict['year'] = c['year'] if 'year' in c else None
+        citation_dict['month'] = c['month'] if 'month' in c else 0
 
         # Concatenate fields that may contain lists
         citation_dict['countries_of_researcher'] = \
@@ -84,7 +85,7 @@ def map_fields(contents):
 
 def update_or_delete(all_citations):
     # Get auth details + date
-    with open('local_details.txt', 'r') as f:
+    with open('server-permissions.txt', 'r') as f:
         keys = f.read().splitlines()
         host, user, password, database = keys
 
@@ -106,12 +107,12 @@ def update_or_delete(all_citations):
                     sql = f"INSERT INTO gbif_citations(abstract, authors, city, " \
                               f"content_type, countries_of_researcher, gbif_download_key," \
                               f"id, harvest_date, doi, language, literature_type, open_access," \
-                              f"peer_review, publisher, source, title, topics, update_date, year)" \
+                              f"peer_review, publisher, source, title, topics, update_date, year, month)" \
                               f"VALUES('{c['abstract']}', '{c['authors']}', '{c['city']}', '{c['content_type']}'," \
                               f"'{c['countries_of_researcher']}', '{c['gbif_download_key']}', '{c['gid']}'," \
                               f"'{c['harvest_date']}', '{c['doi']}', '{c['language']}', '{c['literature_type']}'," \
                               f"'{c['open_access']}', '{c['peer_review']}', '{c['publisher']}', '{c['source']}'," \
-                              f"'{c['title']}', '{c['topics']}', '{c['update_date']}', {c['year']});"
+                              f"'{c['title']}', '{c['topics']}', '{c['update_date']}', {c['year']}, {c['month']});"
 
                 elif c['update_date'] > ids[c['gid']]:
                     sql = f"UPDATE gbif_citations SET abstract = '{c['abstract']}', authors = '{c['authors']}', " \
@@ -122,7 +123,7 @@ def update_or_delete(all_citations):
                           f"literature_type = '{c['literature_type']}', open_access = '{c['open_access']}', " \
                           f"peer_review = '{c['peer_review']}', publisher = '{c['publisher']}', " \
                           f"source = '{c['source']}', title = '{c['title']}', topics = '{c['topics']}', " \
-                          f"update_date = '{c['update_date']}', year = {c['year']} " \
+                          f"update_date = '{c['update_date']}', year = {c['year']}, month = {c['month']} " \
                           f"WHERE id = '{c['gid']}';"
 
                 # Skips if we've seen before and they haven't changed since then
