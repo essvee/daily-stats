@@ -1,7 +1,6 @@
 import requests
 import pymysql
 
-
 def get_parts(citation_id):
     # Get gbif keys from local database - may be > 1 value
     g_keys = get_gbif_keys(citation_id)
@@ -10,9 +9,11 @@ def get_parts(citation_id):
     # For each gbif key, get the component dataset keys and record counts
     for k in g_keys:
         for d in get_dataset_keys(k):
+
             # Find out if we've seen this org before for this citation (might be different dataset)
             d['orgKey'] = get_org_keys(d['d_key'])
             d['orgName'] = get_org_names(d['orgKey'])
+            d['citation_key'] = citation_id
 
             # If org is already there, increment the record count accordingly
             if d['orgName'] in datasets:
@@ -20,8 +21,25 @@ def get_parts(citation_id):
             else:
                 datasets[d['orgName']] = d
 
-    print(datasets.keys())
+    write_out(datasets)
 
+
+def write_out(datasets):
+
+    with open('server-permissions.txt', 'r') as f:
+        keys = f.read().splitlines()
+        host, user, password, database = keys
+
+    for i, d in datasets.items():
+        with pymysql.connect(host=host, user=user, password=password, db=database) as cursor:
+            sql = f"INSERT INTO gbif_occurrences VALUES (null, '{d['citation_key']}', '{d['orgKey']}'," \
+                  f" '{d['orgName']}', {d['record_count']});"
+            try:
+                cursor.execute(sql)
+
+            except pymysql.Error as e:
+                print(sql)
+                print(e)
 
 # Use download keys for each dataset to organization key
 def get_org_keys(d_key):
