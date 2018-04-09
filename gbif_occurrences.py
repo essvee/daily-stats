@@ -1,6 +1,7 @@
 import requests
-import pymysql
 import gbif_dbtools as db
+import itertools
+import collections
 
 
 def assemble_parts(citation_id):
@@ -13,24 +14,21 @@ def assemble_parts(citation_id):
     """
     # Get gbif keys from local database - may be > 1 value
     g_keys = get_gbif_keys(citation_id)
-    datasets = {}
+    org_rec_count = collections.Counter()
 
     # For each gbif key, get the component dataset keys and record counts
     for k in g_keys:
         for d in get_dataset_keys(k):
             # Find out if we've seen this org before for this citation (might be different dataset)
-            d['orgKey'] = get_org_keys(d['d_key'])
-            d['citation_key'] = citation_id
+            key = get_org_keys(d['d_key'])
 
             # If org is already there, increment the record count accordingly
-            if d['orgKey'] in datasets:
-                datasets[d['orgKey']]['record_count'] += d['record_count']
-            else:
-                datasets[d['orgKey']] = d
+            org_rec_count[key] += d['record_count']
 
-    for i, d in datasets.items():
-        db.query_db(f"""INSERT INTO gbif_occurrences VALUES (null, "{d['citation_key']}", "{d['orgKey']}",
-         {d['record_count']});""")
+    for key, count in org_rec_count.items():
+        db.query_db(f"""INSERT INTO gbif_occurrences VALUES (null, "{citation_id}", "{key}",
+         {count});""")
+        # TODO() executeAll() instead?
 
 
 def get_gbif_keys(citation_id):
@@ -39,12 +37,9 @@ def get_gbif_keys(citation_id):
     :param citation_id: string ID of citation being processed
     :return: List<String> of gbif download keys
     """
-    try:
-        cursor = db.query_db(f"SELECT gbif_download_key FROM gbif_citations WHERE id = '{citation_id}';")
-        g_keys = cursor.fetchone()[0].split("; ")
-        return g_keys
-    except pymysql.Error as e:
-        print(e)
+    cursor = db.query_db(f"SELECT gbif_download_key FROM gbif_citations WHERE id = '{citation_id}';")
+    g_keys = cursor.fetchone()[0].split("; ")
+    return g_keys
 
 
 def get_dataset_keys(g_key):
@@ -55,22 +50,18 @@ def get_dataset_keys(g_key):
     :return: List<Dict> of keys for each component dataset and the number of records in each dataset.
     """
     record_sets = []
-    try:
-        count = requests.get(f"http://api.gbif.org/v1/occurrence/download/{g_key}/datasets?limit=0").json()['count']
-        offset = 0
-        end_of_results = False
-        while not end_of_results:
-            r = requests.get(f"http://api.gbif.org/v1/occurrence/download/{g_key}/datasets?limit=500&"
-                             f"offset={offset}").json()
-            offset += 500
-            end_of_results = r['endOfRecords']
 
-            # Get the info we're interested in and return
-            for d in r['results']:
-                dataset = {'d_key': d['datasetKey'], 'record_count': d['numberRecords']}
-                record_sets.append(dataset)
-    except requests.exceptions.HTTPError as e:
-        print(e)
+    for offset in itertools.count(step=500):
+        r = requests.get(f"http://api.gbif.org/v1/occurrence/download/{g_key}/datasets?limit=500&"
+                         f"offset={offset}").json()
+
+        # Get the info we're interested in and return
+        for d in r['results']:
+            dataset = {'d_key': d['datasetKey'], 'record_count': d['numberRecords']}
+            record_sets.append(dataset)
+
+        if r['endOfRecords']:
+            break
 
     return record_sets
 
@@ -81,9 +72,10 @@ def get_org_keys(d_key):
         :param d_key: String ID of one organisation + dataset that contributed to the result
         :return: String organisation key
         """
-        try:
-            r = requests.get(f"http://api.gbif.org/v1/dataset/{d_key}")
-            r.raise_for_status()
-            return r.json()['publishingOrganizationKey']
-        except requests.exceptions.HTTPError as e:
-            print(e)
+        r = requests.get(f"http://api.gbif.org/v1/dataset/{d_key}")
+        r.raise_for_status()
+        return r.json()['publishingOrganizationKey']
+
+
+if __name__ == '__main__':
+    assemble_parts('0d372067-5567-331b-bb80-ef61cb34092b')
