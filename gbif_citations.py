@@ -144,6 +144,7 @@ def occurrences():
     """
     Triggers gbif_occurrences script to run for any new citation ids
     """
+    # TODO() Wrap in try/catch block to get MySQL errors - email notification
     for n in new_ids:
         go.assemble_parts(n)
 
