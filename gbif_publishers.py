@@ -41,3 +41,7 @@ def get_publishers():
         return pub_keys
     except pymysql.Error as e:
         print(e)
+
+
+if __name__ == '__main__':
+    update_publishers()
