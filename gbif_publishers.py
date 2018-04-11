@@ -20,7 +20,6 @@ def update_publishers():
                     publisher_country = p['country'] if 'country' in p else None
                     db.query_db(f"""INSERT INTO gbif_publishers VALUES ("{p['key']}", "{publisher_name}",
                     "{publisher_country}")""")
-                    print(p['key'])
             # Increment offset
             offset += 200
 

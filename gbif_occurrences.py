@@ -19,7 +19,7 @@ def assemble_parts(citation_id):
     # For each gbif key, get the component dataset keys and record counts
     for k in g_keys:
         for d in get_dataset_keys(k):
-            # Find out if we've seen this org before for this citation (might be different dataset)
+            # Get publishing organization ID
             key = get_org_keys(d['d_key'])
 
             # If org is already there, increment the record count accordingly
@@ -52,8 +52,7 @@ def get_dataset_keys(g_key):
     record_sets = []
 
     for offset in itertools.count(step=500):
-        r = requests.get(f"http://api.gbif.org/v1/occurrence/download/{g_key}/datasets?limit=500&"
-                         f"offset={offset}").json()
+        r = requests.get(f"http://api.gbif.org/v1/occurrence/download/{g_key}/datasets?limit=500&offset={offset}").json()
 
         # Get the info we're interested in and return
         for d in r['results']:
