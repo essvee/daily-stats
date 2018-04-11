@@ -39,7 +39,8 @@ def map_fields(contents):
 
     for c in contents:
         citation_dict = {'update_date': datetime.date(int(c['updatedAt'][0:4]), int(c['updatedAt'][5:7]),
-                                                      int(c['updatedAt'][8:10])), 'gid': c['id'],
+                                                      int(c['updatedAt'][8:10])),
+                         'gid': c['id'],
                          'abstract': c['abstract'].replace("'", "''") if 'abstract' in c else None,
                          'city': c['city'] if 'city' in c else None,
                          'content_type': c['contentType'] if 'contentType' in c else None,
@@ -52,8 +53,8 @@ def map_fields(contents):
                          'source': c['source'].replace("'", "''") if 'source' in c else None,
                          'title': c['title'].replace("'", "''") if 'title' in c else None,
                          'year': c['year'] if 'year' in c else None, 'month': c['month'] if 'month' in c else 0,
-                         'countries_of_researcher': separator.join(
-                             c['countriesOfResearcher']) if 'countriesOfResearcher' in c else None,
+                         'countries_of_researcher': separator.join(c['countriesOfResearcher'])
+                         if 'countriesOfResearcher' in c else None,
                          'topics': separator.join(c['topics']) if 'topics' in c else None}
 
         # Get DOI if available
@@ -113,7 +114,8 @@ def update_or_delete(all_citations):
                       f"'{pub_date}');"
 
                 # If new citation, trigger download of occurrence data
-                new_ids.append(c['gid'])
+                if c['gbif_download_key'] != "":
+                    new_ids.append(c['gid'])
 
             elif c['update_date'] > ids[c['gid']]:
                 sql = f"UPDATE gbif_citations SET abstract = '{c['abstract']}', authors = '{c['authors']}', " \
@@ -144,9 +146,13 @@ def occurrences():
     """
     Triggers gbif_occurrences script to run for any new citation ids
     """
-    # TODO() Wrap in try/catch block to get MySQL errors - email notification
-    for n in new_ids:
-        go.assemble_parts(n)
+    try:
+        for n in new_ids:
+            go.assemble_parts(n)
+
+    except pymysql.Error as e:
+        print(n)
+        print(e)
 
 
 if __name__ == '__main__':
