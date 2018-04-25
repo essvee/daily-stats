@@ -25,3 +25,19 @@ def get_keys(filename):
     with open(filename, 'r') as f:
         keys = f.read().splitlines()
         return keys
+
+
+def update_db(sql, row_data):
+    """
+    Batch write to mySQL database
+    :param sql: String script
+    :param row_data: List of parameters to be used with the query
+    :return: Cursor
+    """
+    host, user, password, database = get_keys('server-permissions.txt')
+    with pymysql.connect(host=host, user=user, password=password, db=database) as cursor:
+        try:
+            cursor.executemany(sql, row_data)
+            return cursor
+        except pymysql.Error as e:
+            print(e)

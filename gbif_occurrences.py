@@ -38,7 +38,9 @@ def get_gbif_keys(citation_id):
     :return: List<String> of gbif download keys
     """
     cursor = db.query_db(f"SELECT gbif_download_key FROM gbif_citations WHERE id = '{citation_id}';")
+
     g_keys = cursor.fetchone()[0].split("; ")
+
     return g_keys
 
 
@@ -77,4 +79,4 @@ def get_org_keys(d_key):
 
 
 if __name__ == '__main__':
-    assemble_parts('0d372067-5567-331b-bb80-ef61cb34092b')
+    assemble_parts('3b46e54f-82cf-3cf1-be61-540194f71ab5')
