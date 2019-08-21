@@ -78,6 +78,8 @@ def map_fields(contents):
         else:
             citation_dict['gbif_download_key'] = None
 
+
+
         # Adds this citation to the overall list
         all_citations[c['id']] = citation_dict
 
@@ -100,7 +102,7 @@ def update_or_delete(all_citations):
         # adds/updates new/amended records
         for gid, c in all_citations.items():
             # Creates YYYY-MMM-DD string for publication date
-            pub_date = f"{c['year']}-{c['month']}-01" if c['month'] > 0 else "1000-00-00"
+            pub_date = f"{c['year']}-{c['month']}-01" if c['month'] > 0 else "1111-01-01"
             if c['gid'] not in ids:
                 sql = f"INSERT INTO gbif_citations(abstract, authors, city, " \
                       f"content_type, countries_of_researcher, gbif_download_key," \

@@ -7,7 +7,7 @@ import time
 
 def get_citations():
     doi_sql = "SELECT DISTINCT(doi) from gbif_citations WHERE DOI != 'None';"
-    insert_sql = "INSERT INTO gbif_bibliometrics (doi, times_cited, field_citation_ratio, relative_citation_ratio, date) " \
+    insert_sql = "INSERT INTO gbif_bibliometrics (doi, times_cited, field_citation_ratio, relative_citation_ratio, harvest_date) " \
                 "VALUES (%s, %s, %s, %s, %s)"
 
     # Get list of DOIs

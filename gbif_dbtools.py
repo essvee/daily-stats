@@ -7,7 +7,7 @@ def query_db(sql):
     :param sql: String script to run
     :return: Cursor
     """
-    host, user, password, database = get_keys('server-permissions.txt')
+    host, user, password, database = get_keys('ckan-permissions.txt')
     with pymysql.connect(host=host, user=user, password=password, db=database) as cursor:
         try:
             cursor.execute(sql)
@@ -34,7 +34,7 @@ def update_db(sql, row_data):
     :param row_data: List of parameters to be used with the query
     :return: Cursor
     """
-    host, user, password, database = get_keys('server-permissions.txt')
+    host, user, password, database = get_keys('ckan-permissions.txt')
     with pymysql.connect(host=host, user=user, password=password, db=database) as cursor:
         try:
             cursor.executemany(sql, row_data)

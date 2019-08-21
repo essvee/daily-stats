@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding=utf-8
-
 import requests
 import datetime
 import pymysql
@@ -28,8 +25,7 @@ def count_records():
         else:
             # Otherwise, get the title and identify resource type
             long_name = resource['pkg_title']
-            pkg_type = 'collection records' if long_name in ['Collection specimens', 'Index Lot collection',
-                                                             'Artefacts'] else 'research records'
+            pkg_type = 'collection records' if long_name in ['Collection specimens', 'Index Lot collection', 'Artefacts'] else 'research records'
             # Add to dict
             resource_dict = {'count': record_count, 'name': long_name, 'collection': pkg_type}
             results[pkg_name] = resource_dict
@@ -40,22 +36,26 @@ def count_records():
 def write_records(results):
     # Get auth details + date
     with open('server-permissions.txt', 'r') as f:
-        keys = f.read().splitlines()
-        host, user, password, database = keys
+        s_keys = f.read().splitlines()
+
+    host, user, password, database = s_keys
 
     # Connect to database
-    with pymysql.connect(host="xxxx", user="xxxx", password="xxxx", db="xxxx") as cursor:
+    with pymysql.connect(host=host, user=user, password=password, db=database, autocommit=True) as cursor:
         # Write update to package_comp
+
         for name, resource in results.items():
             pkg_name = name.replace("'", "''")
             today_dt = datetime.datetime.today().date()
             record_count = resource['count']
             pkg_type = resource['collection']
             long_name = str(resource['name']).replace("'", "''").replace("\u2013", "")
-            # Add new row and commit
+
             sql = f"INSERT INTO package_comp(pkg_name, date, record_count, pkg_type, pkg_title, id) " \
-                  f"VALUES('{pkg_name}', '{today_dt}', {record_count} , '{pkg_type}', '{long_name}', null);"
+              f"VALUES('{pkg_name}', '{today_dt}', {record_count} , '{pkg_type}', '{long_name}', null);"
+
             try:
+                # Add new row and commit
                 cursor.execute(sql)
             except pymysql.Error as e:
                 print("MySQL Error: %s \nResource name: %s" % (e, long_name))
