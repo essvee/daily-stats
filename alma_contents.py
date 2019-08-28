@@ -30,13 +30,6 @@ doc = xmltodict.parse(r.text)
 row_data = doc['report']['QueryResult']['ResultXml']['rowset']['Row']
 mapped_row_data = [translate_library(b) for b in row_data]
 
-# API auth keeps flaking out - reading in a stored copy in the meantime
-# with open('../item_count_20190827.xml') as fd:
-#       doc = xmltodict.parse(fd.read())
-#       # Navigate past all the shite to get to the row data
-#       row_data = doc['report']['QueryResult']['ResultXml']['rowset']['Row']
-#       mapped_row_data = [translate_library(b) for b in row_data]
-
 harvest_date = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 insert_parameters = []
 
