@@ -8,9 +8,11 @@ def query_db(sql):
     :return: Cursor
     """
     host, user, password, database = get_keys('ckan-permissions.txt')
-    with pymysql.connect(host=host, user=user, password=password, db=database) as cursor:
+    with pymysql.connect(host=host, user=user, password=password, db=database) as db:
+        cursor = db.cursor()
         try:
             cursor.execute(sql)
+            db.commit()
             return cursor
         except pymysql.Error as e:
             print(e)
@@ -35,9 +37,11 @@ def update_db(sql, row_data):
     :return: Cursor
     """
     host, user, password, database = get_keys('ckan-permissions.txt')
-    with pymysql.connect(host=host, user=user, password=password, db=database) as cursor:
+    with pymysql.connect(host=host, user=user, password=password, database=database) as db:
+        cursor = db.cursor()
         try:
             cursor.executemany(sql, row_data)
+            db.commit()
             return cursor
         except pymysql.Error as e:
             print(e)
