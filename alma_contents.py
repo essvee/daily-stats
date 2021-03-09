@@ -38,7 +38,7 @@ def main():
     # Get values for each row
     for row in mapped_row_data:
         insert_parameters.append((row['Column1'], row['library_code'], harvest_date, int(row['Column3'])))
-        print(f"{row['Column1']} | {row['library_code']} | {'harvest_date'} | {row['Column3']}")
+        # print(f"{row['Column1']} | {row['library_code']} | {'harvest_date'} | {row['Column3']}")
 
     # Get summary for each type of collection/bib level combo (was 600 rows per day otherwise and unnecessary)
     df = pd.DataFrame(insert_parameters, columns=['bib_level', 'collection', 'harvest_date', 'record_count']) \
@@ -50,8 +50,6 @@ def main():
 
     sql = f"INSERT INTO alma_csf_package_comp (bib_level, collection, date, record_count) " \
           f"VALUES (%s, %s, %s, %s)"
-
-    print(sql)
 
     cursor = db.update_db(sql, insert_parameters)
     cursor.close()

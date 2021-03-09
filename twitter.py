@@ -30,5 +30,6 @@ def get_followers():
                  f"(null, '{today_dt}', {follower_count} , {last_count});"
     db.query_db(sql_update)
 
+
 if __name__ == '__main__':
     get_followers()
