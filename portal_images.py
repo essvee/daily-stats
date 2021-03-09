@@ -37,5 +37,4 @@ sql = f"INSERT INTO specimen_images (date, image_count, imaged_specimens, resour
     f"{result_image_count}, {result_imaged_specimens}, " \
     f"'05ff2255-c38a-40c9-b657-4ccb55ab2feb')"
 
-cursor = db.query_db(sql)
-cursor.close()
+db.query_db(sql)
