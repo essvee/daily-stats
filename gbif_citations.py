@@ -91,7 +91,7 @@ def update_or_delete(all_citations):
     Checks through citation database to see if anything is new or updated
     :param all_citations: dict containing cleaned citation info
     """
-    cursor = db.query_db(f"SELECT id, update_date FROM gbif_citations;")
+    cursor = db.query_db("SELECT id, update_date FROM gbif_citations;")
     try:
         # Create dict of ids already recorded
         ids = {}
@@ -159,4 +159,4 @@ def occurrences():
 
 if __name__ == '__main__':
     get_list()
-    occurrences()
+#    occurrences()
