@@ -1,6 +1,5 @@
 import requests
 import datetime
-import pymysql
 import gbif_dbtools as db
 
 
