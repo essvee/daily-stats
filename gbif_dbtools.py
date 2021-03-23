@@ -15,6 +15,7 @@ def query_db(sql):
             db.commit()
             return cursor
         except pymysql.Error as e:
+            print(sql)
             print(e)
 
 
