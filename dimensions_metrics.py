@@ -29,6 +29,7 @@ def get_citations():
                                today_dt))
         # Skip over DOIs which aren't found
         except HTTPError:
+            print(d[0])
             continue
 
     # Insert

@@ -113,9 +113,9 @@ def triage_citations(works):
             # get matching result from api payload
             api_record = works[x[0]]
 
-            # compare modified and update_date. If api result update > database update date, delete and reload
+            # compare modified and update_date. If api result update > database update date, add to 'add' list
+            # any duplicate keys will trigger an update
             if api_record['update_date'] > x[1]:
-                citation_ids_to_delete.append(x[0])
                 citation_ids_to_add.append(x[0])
 
     # Remove redacted records and records in need of updating
@@ -147,7 +147,15 @@ def add_citations(new_citations):
                    "doi, language, literature_type, open_access, peer_review, publisher, source, title, " \
                    "topics, update_date, year, month, pub_date, total_dataset_count, total_record_count, " \
                    "nhm_record_count) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, " \
-                   "%s, %s, %s, %s, %s)"
+                   "%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE abstract = VALUES(abstract), " \
+                   "authors = VALUES(authors), countries_of_researcher = VALUES(countries_of_researcher), " \
+                   "harvest_date = VALUES(harvest_date), doi = VALUES(doi), language = VALUES(language), " \
+                   "literature_type = VALUES(literature_type), open_access = VALUES(open_access), " \
+                   "peer_review = VALUES(peer_review), publisher = VALUES(publisher), source = VALUES(source), " \
+                   "title = VALUES(title), topics = VALUES(topics), update_date = VALUES(update_date), " \
+                   "year = VALUES(year), month = VALUES(month), pub_date = VALUES(pub_date), " \
+                   "total_dataset_count = VALUES(total_dataset_count), " \
+                   "total_record_count = VALUES(total_record_count), nhm_record_count = VALUES(nhm_record_count)"
 
     # Call occurrence script here: should take new_citations and return a list of the same record with total
     # publisher count, total record count, nhm record count fields added and populated
