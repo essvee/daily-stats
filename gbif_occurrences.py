@@ -40,9 +40,15 @@ def assemble_parts(citation_record):
 
 def get_download_counts(gbif_download_key):
     # Get the overall metadata for this download first + grab total number of records
-    r = requests.get(f"http://api.gbif.org/v1/occurrence/download/{gbif_download_key}").json()
-    download_total_records = r['totalRecords']
-    return download_total_records
+    url = f"http://api.gbif.org/v1/occurrence/download/{gbif_download_key}"
+    r = requests.get(url)
+    try:
+        r.raise_for_status()
+        download_results = r.json()
+        download_total_records = download_results['totalRecords']
+        return download_total_records
+    except ValueError as e:
+        print(e)
 
 
 def get_dataset_details(gbif_download_key):
