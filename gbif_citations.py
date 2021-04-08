@@ -118,26 +118,34 @@ def triage_citations(works):
             if api_record['update_date'] > x[1]:
                 citation_ids_to_add.append(x[0])
 
-    # Remove redacted records and records in need of updating
-    if len(citation_ids_to_delete) > 0:
-        remove_citations(citation_ids_to_delete)
-
     # Get brand new + updated/to be re-added citation records from api payload
-    if len(citation_ids_to_add) > 0:
+    if citation_ids_to_add:
         # Generate list containing new row values
         citations_to_add = [works[p] for p in citation_ids_to_add]
         add_citations(citations_to_add)
+
+    # Remove redacted records and records in need of updating
+    if citation_ids_to_delete:
+        remove_citations(citation_ids_to_delete)
 
 
 def remove_citations(citation_ids):
     # Delete statement: generate and execute in a batch
     sql = "DELETE FROM gbif_citations where id = %s"
 
-    # List of ids to be deleted from gbif_citations (cascades across related tables)
+    # List of ids to be deleted from gbif_citations
     params = citation_ids
 
     # Trigger delete operation. Cascades to related records in gbif_occurrences and gbif_bibliometrics
     db.update_db(sql, params)
+
+    # check there's no orphaned rows left in gbf_bibliometrics: remove if any found
+    gb_sql = "select * FROM gbif_bibliometrics gb WHERE gb.doi NOT IN (SELECT gc.doi FROM gbif_citations gc);"
+    orphaned_bibliometrics = db.query_db(gb_sql).fetchall()
+
+    if len(orphaned_bibliometrics) > 0:
+        bib_sql = "DELETE FROM gbif_bibliometrics where id = %s"
+        db.update_db(bib_sql, orphaned_bibliometrics)
 
 
 def add_citations(new_citations):
@@ -171,7 +179,7 @@ def add_citations(new_citations):
                          record['month'], record['pub_date'], record['total_dataset_count'],
                          record['total_record_count'], record['nhm_record_count']))
 
-        print(record['title'])
+    #    print(record['title'])
 
     try:
         db.update_db(insert_query, row_data)
