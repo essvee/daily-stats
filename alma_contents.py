@@ -32,6 +32,7 @@ def main():
     row_data = doc['report']['QueryResult']['ResultXml']['rowset']['Row']
     mapped_row_data = [translate_library(b) for b in row_data]
 
+    # rundate
     harvest_date = datetime.date.today().strftime("%Y-%m-%d")
     insert_parameters = []
 
