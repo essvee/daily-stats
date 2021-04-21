@@ -32,13 +32,12 @@ def main():
     row_data = doc['report']['QueryResult']['ResultXml']['rowset']['Row']
     mapped_row_data = [translate_library(b) for b in row_data]
 
-    harvest_date = (datetime.date.today() - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+    harvest_date = datetime.date.today().strftime("%Y-%m-%d")
     insert_parameters = []
 
     # Get values for each row
     for row in mapped_row_data:
         insert_parameters.append((row['Column1'], row['library_code'], harvest_date, int(row['Column3'])))
-        # print(f"{row['Column1']} | {row['library_code']} | {'harvest_date'} | {row['Column3']}")
 
     # Get summary for each type of collection/bib level combo (was 600 rows per day otherwise and unnecessary)
     df = pd.DataFrame(insert_parameters, columns=['bib_level', 'collection', 'harvest_date', 'record_count']) \
