@@ -1,4 +1,7 @@
+# auth files
 apikeys.txt
 alma-key.txt
 msq-permissions.txt
+# server ignores
 venv
+logs
